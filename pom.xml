@@ -28,7 +28,27 @@
     </scm>
     <properties>
         <java.version>21</java.version>
+        <maven.build.timestamp.format>ddMMyyyyHHmmss</maven.build.timestamp.format>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+
+        <liquibase.hibernate6.version>4.26.0</liquibase.hibernate6.version>
+        <javassist.version>3.24.0-GA</javassist.version>
+        <jakarta.validation-api.version>3.0.2</jakarta.validation-api.version>
+
+        <core-service-version>0.0.1-SNAPSHOT</core-service-version>
     </properties>
+    <repositories>
+        <repository>
+            <id>github</id>
+            <url>
+                https://maven.pkg.github.com/creatorsventure/s01-core-service
+            </url>
+            <snapshots>
+                <enabled>true</enabled>
+                <updatePolicy>always</updatePolicy>
+            </snapshots>
+        </repository>
+    </repositories>
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -46,7 +66,6 @@
             <groupId>org.liquibase</groupId>
             <artifactId>liquibase-core</artifactId>
         </dependency>
-
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
@@ -67,6 +86,11 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>com.cv</groupId>
+            <artifactId>s01-core-service</artifactId>
+            <version>${core-service-version}</version>
+        </dependency>
     </dependencies>
 
     <build>
@@ -81,6 +105,62 @@
                             <artifactId>lombok</artifactId>
                         </exclude>
                     </excludes>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.liquibase</groupId>
+                <artifactId>liquibase-maven-plugin</artifactId>
+                <dependencies>
+                    <dependency>
+                        <groupId>jakarta.validation</groupId>
+                        <artifactId>jakarta.validation-api</artifactId>
+                        <version>${jakarta.validation-api.version}</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.javassist</groupId>
+                        <artifactId>javassist</artifactId>
+                        <version>${javassist.version}</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.liquibase.ext</groupId>
+                        <artifactId>liquibase-hibernate6</artifactId>
+                        <version>${liquibase.hibernate6.version}</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.springframework.boot</groupId>
+                        <artifactId>spring-boot-starter-data-jpa</artifactId>
+                        <version>${project.parent.version}</version>
+                    </dependency>
+                </dependencies>
+                <configuration>
+                    <changeLogFile>
+                        src/main/resources/db/changelog/db.changelog-master.xml
+                    </changeLogFile>
+                    <outputChangeLogFile>
+                        ${project.basedir}/src/main/resources/db/changelog/generatechangelog/${maven.build.timestamp}_changelog_out.xml
+                    </outputChangeLogFile>
+                    <diffChangeLogFile>
+                        ${project.basedir}/src/main/resources/db/changelog/diff/${maven.build.timestamp}_changelog_diff.xml
+                    </diffChangeLogFile>
+
+                    <!-- H2 Dev DB - start-->
+                    <driver>org.h2.Driver</driver>
+                    <url>
+                        jdbc:h2:${project.basedir}/config/db/h2/devdb;DB_CLOSE_ON_EXIT=FALSE</url>
+                    <username>devdb</username>
+                    <password>devdb</password>
+                    <!-- H2 Dev DB - Stop-->
+                    <!-- Postgres Test DB - start
+                    <driver>org.postgresql.Driver</driver>
+                    <url>jdbc:postgresql://localhost:5432/testdb</url>
+                    <username>postgres</username>
+                    <password>postgres123</password>
+                     Postgres Test DB - Stop-->
+                    <referenceUrl>
+                        hibernate:spring:com.org.coreservice.entity?dialect=org.hibernate.dialect.H2Dialect&amp;hibernate.physical_naming_strategy=org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy&amp;hibernate.implicit_naming_strategy=org.springframework.boot.orm.jpa.hibernate.SpringImplicitNamingStrategy
+                    </referenceUrl>
+                    <verbose>true</verbose>
+                    <logging>debug</logging>
                 </configuration>
             </plugin>
         </plugins>
